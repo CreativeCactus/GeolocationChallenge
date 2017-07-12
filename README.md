@@ -93,6 +93,8 @@ Returns JSON containing the matching request or `{err:"Record not found"}`
 
 ## Known Bugs
 
+* API states are malfunctional as of last commit! *
+
 Tests are not set up
 
 Dockerfile not included
