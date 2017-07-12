@@ -28,8 +28,11 @@ latlonApp.controller('ngCtrl', ($scope) => {
     $scope.UploadStatus = UploadStatusEnum.NoFile;
     $scope.EntriesList = () => {
         if (EntriesList.length == 0) return 'Make a request below to begin...';
-        console.dir(EntriesList);
-        return EntriesList.map(v => `<div class="entryItem"><a href="/api/${v.id}">${v.id} [${v.status}:${v.message}] (${v.percent || 0}%)</p></div>`).join('<br>');
+        return EntriesList.map((v, i) => `<div class="entryItem">
+            <p>${v.id} [${v.status}] (${v.percent || 0}%)</p>
+            <a href="javascript:mapShow('${i}')"> [Show on MAP]</a>
+            <a href="/api/${v.id}"> [Show on API]</a>
+        </div>`).join('<hr>');
     };
     
 
@@ -54,17 +57,18 @@ latlonApp.controller('ngCtrl', ($scope) => {
         }
 
         const file = select.files[0];
+        const size = `${~~(file.size / 1024)}KB`;
 
-        // Limit filetpyes allowed
-        if (allowedTypes.indexOf(file.type) < 0) {
-            $scope.UploadStatus = UploadStatusEnum.BadType + file.type;
+        // Limit filesize to 1MB
+        if (file.size > (1 << 20)) {
+            $scope.UploadStatus = UploadStatusEnum.TooBig + size;
             $scope.$apply();
             return;
         }
 
-        // Limit filesize to 1MB
-        if (file.size > (1 << 20)) {
-            $scope.UploadStatus = `${UploadStatusEnum.TooBig + ~~(file.size / 1024)}KB`;
+        // Limit filetpyes allowed
+        if (allowedTypes.indexOf(file.type) < 0) {
+            $scope.UploadStatus = UploadStatusEnum.BadType + file.type;
             $scope.$apply();
             return;
         }
@@ -92,6 +96,7 @@ latlonApp.controller('ngCtrl', ($scope) => {
     */
 
     const upload = function () {
+        select.value = '';
         if (!json) {
             $scope.UploadStatus = UploadStatusEnum.NoFile;
             $scope.$apply();
@@ -100,12 +105,12 @@ latlonApp.controller('ngCtrl', ($scope) => {
 
         // Perform a POST
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/', true);
+        xhr.open('POST', '/api/', true); // true for async
         xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 
         // Handle the response
         xhr.onloadend = function () {
-            // Check that the response is JSON
+            // Check that the reply is JSON
             let response = xhr.responseText;
             try {
                 response = JSON.parse(response);
@@ -160,19 +165,85 @@ latlonApp.controller('ngCtrl', ($scope) => {
     // Update the entry list and merge results
     const listUpdate = function () {
         EntriesList.forEach((e, i) => {
-            if (e.error) return;
+            if (e.error) return; // Skip errors
+            function evalInScope() { $scope.$apply(); }
 
             entryUpdate(e.id)
-                .then((entry) => { EntriesList[i] = merge(EntriesList[i], entry); })
-                .then($scope.$apply)
-                .catch((err) => { EntriesList[i].error = err; });
+                .then((entry) => { EntriesList[i] = Object.assign(EntriesList[i], entry); })
+                .catch((err) => { EntriesList[i].error = err; })
+                .then(evalInScope);
         });
     };
 
+    /*
+    .88b  d88.  .d8b.  d8888b. .d8888. 
+    88'YbdP`88 d8' `8b 88  `8D 88'  YP 
+    88  88  88 88ooo88 88oodD' `8bo.   
+    88  88  88 88~~~88 88~~~     `Y8b. 
+    88  88  88 88   88 88      db   8D 
+    YP  YP  YP YP   YP 88      `8888Y' 
+    */
+
+    let mapObj;
+    let mapPins = [];
+
+    mapShow = function mapShow(index) {
+        const entry = EntriesList[index] || {};
+        setPins(entry.children);
+    };
+
+    function setPins(items = []) {
+        // Remove all pins
+        mapPins.forEach(p => p.setMap(null));
+
+        // Convert location objects to needed format
+        items = items.map(v => ({
+            name: v.name,
+            latlng: v.latlng || stringToLatlng(v.location)
+        }));
+
+        // Calculate average location
+        const average = items
+            .map(v => v.latlng)
+            .reduce((t, v) => {
+                t.lat = (t.lat * t.cnt + v.lat) / (t.cnt + 1);
+                t.lng = (t.lng * t.cnt + v.lng) / (t.cnt + 1);
+                t.cnt++;
+                return t;
+            }, { lat: 0, lng: 0, cnt: 0 });
+
+        // Create and set pins
+        mapPins = items.map(v =>
+            new google.maps.Marker({
+                position: v.latlng,
+                title: v.name,
+                map: mapObj
+            })
+        );
+        mapObj.setCenter(average);
+    }
+
+    function stringToLatlng(str) {
+        try {
+            const parts = (str || '').split(',').map(v => parseFloat(v));
+            if (parts.length !== 2) return { lat: 0, lng: 0 };
+            return { lat: parts[0], lng: parts[1] };
+        } catch (e) {
+            return { lat: 0, lng: 0 };  
+        }
+    }
+
     // Initialisation
-    submit.addEventListener('click', upload);
+    const pollRate = parseInt(document.body.dataset.poll, 10);
     select.addEventListener('change', selecting);
-    setInterval(listUpdate, 10 * 1000); // check updates every 10 sec
+    submit.addEventListener('click', upload);
+    setInterval(listUpdate, pollRate);
+    const options = {
+        zoom: 5,
+        center: stringToLatlng(''),
+        mapTypeId: google.maps.MapTypeId.HYBRID
+    };
+    mapObj = new google.maps.Map(document.getElementById('map'), options);
 
     // Check for File API support.
     const FullFileAPISupport = window.File && window.FileReader && window.FileList && window.Blob;
@@ -190,6 +261,7 @@ db    db d888888b d888888b db      .d8888.
 ~Y8888P'    YP    Y888888P Y88888P `8888Y'
 */
 
+let mapShow;
 function CSVtoJSON(csv, headerLinePresent = false) {
     // Define beastly regex for matching commas outside of top level quotes.
     const rxCommasOutsideQuotes = /,(?=([^`'"]*[`'"][^`'"]*[`'"])*[^`'"]*$)/g;
@@ -223,14 +295,4 @@ function CSVtoJSON(csv, headerLinePresent = false) {
 
     // Return resultant array
     return JSON.stringify(results);
-}
-
-function merge(target, source) {
-    Object.keys(source).forEach((key) => {
-        if (source[key] instanceof Object) Object.assign(source[key], merge(target[key], source[key]));
-    });
-
-    // Join `target` and modified `source`
-    Object.assign(target || {}, source);
-    return target;
 }

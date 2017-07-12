@@ -3,6 +3,7 @@ const koaRouter = require('koa-router');
 const crypto = require('crypto');
 
 const geo = require('./geolocation');
+const DB = require('./db');
 
 const router = koaRouter({
     prefix: '/api'
@@ -11,7 +12,7 @@ const router = koaRouter({
 router.use(bodyParser({
     enableTypes: ['json'],
     onerror: (err, ctx) => {
-        if (ctx.config.debug) console.dir(err);
+        if (ctx.config.debug) console.trace(err);
         ctx.util.end(400, `Malformed JSON: ${err.message}`);
     }
 }));
@@ -26,6 +27,7 @@ Y8b  d8 88 `88. 88.     88   88    88    88.
 */
 
 router.post('/', async (ctx) => {
+    const db = DB(ctx);
     const data = ctx.request.body;
     ctx.body = { status: 'Interrupted...' };
 
@@ -46,65 +48,72 @@ router.post('/', async (ctx) => {
         loc.status = ctx.util.statusToInt('pending');
         return loc;
     });
-
+    const addresses = validated.map(l => l.address);
+    const indexed = validated.reduce((t, loc) => { // Reduce to an object, index by address.
+        t[loc.address] = loc;
+        return t;
+    }, {});
     // Generate a hash ID for this request
     const hash = crypto.createHash('sha256');
     hash.update(JSON.stringify(data));
     // Include some crypto random to prevent attacks via selected ID, also improve ID-space
     const id = hash.digest('hex').slice(0, 8) + crypto.randomBytes(4).toString('hex');
 
+
+    // Calculate the initial progress
+    const exist = (await db.location.find({ address: { $in: addresses } })) || [];
+    const all = (await db.location.find({ })) || [];
+    const complete = exist.filter(loc => loc.status === ctx.util.statusToInt('ready'));
+    const percent = ~~((100 * validated.length) / complete.length);
+    const status = (percent === 100) ? 'ready' : 'pending';
+
+    // Exclude extant records from insertion
+    exist.forEach((loc) => { delete indexed[loc.address]; });
+    const validatedTrimmed = Object.values(indexed) || [];
+
+    console.trace({ all, exist, addresses });
+    
     // Store the root of the request synchronously
     const request = {
+        children: exist.map(loc => loc._id) || [],
+        status: ctx.util.statusToInt(status),
         numChildren: validated.length,
+        numComplete: exist.length,
         start: ctx.startTime,
-        message: 'Started.',
-        status: 'pending',
         type: 'request',
         id
     }; 
-    const insertion = new Promise((a, r) => {
-        try {
-            ctx.db.insert(request, (err, docs) => {
-                if (err) throw err;
-            });
-        } catch (err) {
-            if (!err) {
-                console.log('Unexpected db insertion failure');
-                return;
-            }
-            if (ctx.config.debug) {
-                ctx.body = err;
-            } else {
-                ctx.util.end(400, `Error: ${err.message}`);
-            }
-            console.dir(err);
+    const result = await db.request.insert(request).catch((err) => {
+        if (ctx.config.debug) {
+            ctx.body = err;
+        } else {
+            ctx.util.end(400, `Error: ${err.message}`);
         }
-        a();
+        console.trace(err);
     });
-    await insertion;
+    console.trace({ result });
 
-    // Format and store the locations asynchronously
-    ctx.db.insert(validated, (err, docs) => {
-        if (err && ctx.config.debug) return console.dir(err);
-        console.dir({ docs });
 
-        // Find the locations with the given addresses (some might not be unique, so not in docs)
-        const addresses = validated.map(l => l.address);
-        ctx.db.find({ type: 'location', address: { $in: addresses } }, (err, docs) => {
-            if (err && ctx.config.debug) return console.dir(err);
+    // Format and store the locations asynchronously, one by one (some may be dupe)
+    for (let i = 0; i < validatedTrimmed.length; i++) {
+        validatedTrimmed[i] = await db.location.insert(validatedTrimmed[i]);
+    }
+    // Find the locations with the given addresses (some might not be unique, so not in docs)
+    db.location.find({ address: { $in: addresses } }).then((docs = []) => {
+        const ids = docs.map(d => d._id);
 
-            const ids = docs.map(d => d._id);
-
-            // Update the parent request with the location ids
-            ctx.db.update({ id, type: 'request' }, { $set: { children: ids } }, {}, (err, num) => {
-                if (err && ctx.config.debug) return console.dir(err);
-            });
-        });
+        // Update the parent request with the location ids
+        db.request.update({ id, type: 'request' }, { $set: { children: ids } });
     });
+
+    // Formulate a response
+    const response = Object.assign({}, request);
+    response.children = [];
+    response.percent = percent;
 
     ctx.body = {
         status: ctx.util.statusToInt('pending'),
-        request
+        request: presentable(response, ctx.util)
     };
 });
 
@@ -118,65 +127,66 @@ d8888b. d88888b  .d8b.  d8888b.
 */
 
 router.get('/:id', async (ctx) => {
+    const db = DB(ctx);
     const id = ctx.params.id;
 
     // Promise request with given id
-    const getReq = new Promise((a, r) => {
-        ctx.db.find({ type: 'request', id }, (err, docs) => {
-            if (ctx.config.debug && err) {
-                console.dir(e); 
-                return a({ err: { code: 500, err: JSON.stringify(err) } });
-            }
-            if (err) {
-                return a({ err: { code: 500, err: 'Internal Server Error' } });
-            }
-            if (docs.length < 1) {
-                return a({ err: { code: 404, err: 'Record not found' } });
-            }
-            if (docs.length > 1) {
-                return a({ err: { code: 500, err: 'Record Error' } });
-            }
-
-            a({ req: docs[0] });
-        });
-    });
-
-    // Promise array of locations matching array of ids
-    const getLocs = ids => new Promise((a, r) => {
-        if (!ids || !ids.length) return a({ locs: [] });
-        ctx.db.find({ type: 'location', status: ctx.util.statusToInt('ready') }, (err, docs) => {
-            if (ctx.config.debug && err) {
-                console.dir(e);
-                return a({ err: { code: 500, err: JSON.stringify(err) } });
-            }
-            if (err) {
-                return a({ err: { code: 500, err: 'Internal Server Error' } });
-            }
-
-            a({ locs: docs });
-        });
-    });
-
-
-    const parent = await getReq;
-    if (parent.err || parent.req === null) {        
-        return ctx.util.end(parent.err.code || 500, parent.err || 'Internal Server Error');
+    const request = await db.request.findOne({ id }).then(doc => ({ doc })).catch(err => ({ err }));
+    if (ctx.config.debug && request.err) {
+        console.trace(err); 
+        return ctx.util.end(500, JSON.stringify(request.err));
+    }
+    if (request.err) {
+        return ctx.util.end(500, 'Internal Server Error');
+    }
+    if (!request.doc || request.doc.length < 1) {
+        return ctx.util.end(404, 'Record not found');
     }
 
-    const { locs, err } = await getLocs(parent.req.children);
-    if (err || locs === null) {
-        return ctx.util.end(parent.err.code || 500, parent.err || 'Internal Server Error');
+    // Get array of locations matching array of ids
+    const childIds = parent.req.children;
+    const locations = (!childIds || !childIds.length) ?
+    await db.location.find({ 
+        id: { $in: childIds },
+        status: ctx.util.statusToInt('ready')
+    }).then(locs => ({ locs }))
+        .catch(err => ({ err })) :
+        { locs: [] };
+
+    if (ctx.config.debug && locations.err) {
+        console.trace(err);
+        return ctx.util.end(500, JSON.stringify(request.err));
+    }
+    if (locations.err) {
+        return ctx.util.end(500, 'Internal Server Error');
     }
 
-    const result = {
-        id: parent.req.id,
-        percent: ~~((100 * parent.req.children.length) / (locs.length || 0.1)),
-        message: parent.req.message,
-        children: locs.map((loc) => { delete loc.id; return loc; })
-    };
+    // Re-evaluate status, then update async
+    const percent = locs.length ? ~~((100 * parent.req.children.length) / locs.length) : 0;
+    const done = (percent === 100);
+    parent.req.status = ctx.util.statusToInt(done ? 'ready' : 'pending');
+    db.request.update({ id }, parent.req);
 
-    ctx.body = result;
+    // Formulate response
+    const response = Object.assign({}, parent.req);
+    response.status = ctx.util.intToStatus(response.status);
+    response.percent = percent;
+    response.children = locs;
+    ctx.body = presentable(parent.req, ctx.util);
 });
+
+function presentable(req, util) {
+    return {
+        id: req.id,
+        type: req.type,
+        start: req.start,
+        status: util.intToStatus(req.status),
+        percent: req.percent,
+        children: req.children || [],
+        numComplete: req.numComplete,
+        numChildren: req.numChildren
+    };
+}
 
 module.exports = (app) => {
     app.use(router.routes());

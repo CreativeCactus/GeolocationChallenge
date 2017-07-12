@@ -1,13 +1,14 @@
-{"name":"Cafe Dockside","address":"35 Ferry St, Kangaroo Point QLD 4169","location":"-27.4721317,153.0367206","type":"location","status":2,"_id":"BZ8EjjB36W7EAsxg"}
-{"numChildren":5,"start":{"$$date":1499844112496},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f159e1aa9c","_id":"IbHmoD6GxbUEtbYY","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
-{"numChildren":5,"start":{"$$date":1499843610892},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f133d22f77","_id":"NDA52qiOEzapVavl","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
-{"name":"Wicked Corner Cafe","address":"2/166 Wickham Terrace, Spring Hill QLD 4000","location":"-27.4651285,153.0244078","type":"location","status":2,"_id":"SKB8V9jXTZPE0xdQ"}
-{"name":"Espresso Garage","address":"176 Grey St, South Brisbane QLD 4101","location":"-27.4792355,153.0222656","type":"location","status":2,"_id":"UFIZsdG7pz9tfdQM"}
-{"name":"Coffee Iconic","address":"340 George Street, Brisbane QLD 4000","location":"-27.469296,153.0216909","type":"location","status":2,"_id":"V01hBXev469riSzZ"}
-{"numChildren":5,"start":{"$$date":1499843542694},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f12409ff77","_id":"c5I97dPknGDHhJ5f","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
-{"numChildren":5,"start":{"$$date":1499843424761},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f133ec8b55","_id":"ng0XU3bOIREnwLqO","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
-{"numChildren":5,"start":{"$$date":1499843664226},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f182250073","_id":"ra73QFqkuPLGfpnR","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
-{"name":"AginicX","address":"135 Wickham Terrace, Spring Hill QLD 4000","location":"-27.4643931,153.0254013","type":"location","status":2,"_id":"yxQFllXcnH5ERusp"}
 {"$$indexCreated":{"fieldName":"address","unique":true,"sparse":true}}
-{"numChildren":5,"start":{"$$date":1499844355955},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f1b1198554","_id":"UjFbTNTpYUSb2bMm"}
-{"numChildren":5,"start":{"$$date":1499844355955},"message":"Started.","status":"pending","type":"request","id":"0ba5b0f1b1198554","_id":"UjFbTNTpYUSb2bMm","children":["yxQFllXcnH5ERusp","UFIZsdG7pz9tfdQM","BZ8EjjB36W7EAsxg","SKB8V9jXTZPE0xdQ","V01hBXev469riSzZ"]}
+{"$$indexCreated":{"fieldName":"id","unique":true,"sparse":true}}
+{"children":[],"status":1,"numChildren":5,"numComplete":0,"start":{"$$date":1499894555049},"type":"request","id":"0ba5b0f171e604e3","_id":"RNde9YpjXajCZnIy"}
+{"name":"AginicX","address":"135 Wickham Terrace, Spring Hill QLD 4000","location":"","type":"location","status":1,"_id":"JrdT1tnuDC0uOYhU"}
+{"name":"Espresso Garage","address":"176 Grey St, South Brisbane QLD 4101","location":"","type":"location","status":1,"_id":"Iq1gNbQzkcaj3kWX"}
+{"name":"Cafe Dockside","address":"35 Ferry St, Kangaroo Point QLD 4169","location":"","type":"location","status":1,"_id":"QmoVKZ7ZQAoOHDXK"}
+{"name":"Wicked Corner Cafe","address":"2/166 Wickham Terrace, Spring Hill QLD 4000","location":"","type":"location","status":1,"_id":"YFYZCENOgELlTUF4"}
+{"name":"Coffee Iconic","address":"340 George Street, Brisbane QLD 4000","location":"","type":"location","status":1,"_id":"ee9v6Jn6r6FmBYXR"}
+{"children":[],"status":1,"numChildren":5,"numComplete":0,"start":{"$$date":1499894555049},"type":"request","id":"0ba5b0f171e604e3","_id":"RNde9YpjXajCZnIy"}
+{"name":"Espresso Garage","address":"176 Grey St, South Brisbane QLD 4101","location":"-27.4792355,153.0222656","type":"location","status":2,"_id":"Iq1gNbQzkcaj3kWX"}
+{"name":"AginicX","address":"135 Wickham Terrace, Spring Hill QLD 4000","location":"-27.4643931,153.0254013","type":"location","status":2,"_id":"JrdT1tnuDC0uOYhU"}
+{"name":"Cafe Dockside","address":"35 Ferry St, Kangaroo Point QLD 4169","location":"-27.4721317,153.0367206","type":"location","status":2,"_id":"QmoVKZ7ZQAoOHDXK"}
+{"name":"Wicked Corner Cafe","address":"2/166 Wickham Terrace, Spring Hill QLD 4000","location":"-27.4651285,153.0244078","type":"location","status":2,"_id":"YFYZCENOgELlTUF4"}
+{"name":"Coffee Iconic","address":"340 George Street, Brisbane QLD 4000","location":"-27.469296,153.0216909","type":"location","status":2,"_id":"ee9v6Jn6r6FmBYXR"}

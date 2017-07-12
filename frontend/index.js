@@ -46,7 +46,11 @@ const compile = {
 };
 
 router.get('/', compile.haml(cwd('/frontend/src/index.haml'), {}, async (send, ctx) => {
-    ctx.body = send(ctx, { stats: `${ctx.stats.locations} locations indexed to date!`, content: 'CONTEEEEEEEEEEEEENT     ' });
+    ctx.body = send(ctx, { 
+        stats: `${ctx.stats.locations} locations indexed to date!`,
+        poll: ctx.config.poll,
+        googleapikey: ctx.config.google.apikey
+    });
 }));
 
 router.get('/style.css', compile.serve(cwd('/frontend/src/style.css'), { mimeType: 'text/css' }));

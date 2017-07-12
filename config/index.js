@@ -9,19 +9,27 @@ const base = {
     allowPartialData: false,
     // Google API settings and credentials
     google: {
-        apikey: ''
-    }
+        apikey: '',
+        // ms to wait between checking if a request can be made. Requests never overlap.
+        sleep: 1000
+    },
+    // ms for frontend to wait between polling for status updates.
+    poll: 5000
 };
 
 module.exports = merge(base, locals);
 
-// Utility
 function merge(target, source) {
-    Object.keys(source).forEach((key) => {
-        if (source[key] instanceof Object) Object.assign(source[key], merge(target[key], source[key]));
-    });
-
-    // Join `target` and modified `source`
-    Object.assign(target || {}, source);
-    return target;
+    const isObject = item => (item && typeof item === 'object' && !Array.isArray(item));
+    const output = Object.assign({}, target);
+    if (isObject(target) && isObject(source)) {
+        Object.keys(source).forEach((key) => {
+            if (isObject(source[key])) {
+                if (!(key in target)) { Object.assign(output, { [key]: source[key] }); } else { output[key] = merge(target[key], source[key]); }
+            } else {
+                Object.assign(output, { [key]: source[key] });
+            }
+        });
+    }
+    return output;
 }

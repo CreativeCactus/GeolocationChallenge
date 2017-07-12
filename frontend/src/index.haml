@@ -5,8 +5,9 @@
     %link{rel: "icon", href: "favicon.ico?reload", type:"image/x-icon"}
     %link{rel: "stylesheet", href: "/style.css", type:"text/css"}
     %script{src:"https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js", integrity:"sha256-zBy1l2WBAh2vPF8rnjFMUXujsfkKjya0Jy5j6yKj0+Q=", crossorigin:"anonymous", type:"text/javascript"}
+    %script{src:"https://maps.googleapis.com/maps/api/js?key="+googleapikey}
+  %body{ng-app:"latlonApp",data-poll:poll}
     %script{src:"/assets/main.js", type:"text/javascript"}
-  %body{ng-app:"latlonApp"}
     %section.container{ng-controller:"ngCtrl"}
       %div.header
         %h1= "Address2LatLon"
@@ -21,7 +22,4 @@
           %div.down#UploadStatus
             = "{{UploadStatus}}"
     %br
-    %br
-    %br
-    %hr
-    %div="Map goes here... (incomplete)"
+    %div#map="Map failed to load"

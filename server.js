@@ -12,14 +12,17 @@ middlewares(app, config);
 frontend(app);
 api(app);
 
+// 404
 app.use((ctx) => { 
     ctx.redirect('/');
-    // ctx.util.end(404, 'Unknown endpoint'); 
 });
-
-// todo catch compile error and print trace only if debug
-console.log('Todo move config out');
 
 app.listen(config.port, config.host, () => {
     console.log(`Listening on ${config.host || ''}:${config.port}`);
 });
+
+if (config.debug) {
+    process.on('unhandledRejection', (err, p) => {
+        console.trace(err);
+    });
+}

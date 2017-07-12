@@ -4,29 +4,30 @@
     padding:0;
     margin: 0 auto;
     text-align:center;
+    vertical-align: middle;
 }
 
 body{
+    width: 100vw;
+    height: 100vh;
     color: #111111;
+    overflow: hidden;
     background-size: 128px 128px;
     font:14px/1.3 'Open Sans', sans-serif;
     background-image: url('/assets/tile3.jpg');
 }
 
-.header{
-    text-shadow: white 0.1em 0.1em 0.2em;
-}
+.header{text-shadow: white 0.1em 0.1em 0.2em;}
+h1{font:28px/1.3 'Open Sans', sans-serif;}
+h2{font:20px/1.3 'Open Sans', sans-serif;}
+.controls > * {display: inline;}
+a{color: #FFFFFF;}
 
-h1{
-    font:28px/1.3 'Open Sans', sans-serif;
-}
-
-h2{
-    font:20px/1.3 'Open Sans', sans-serif;
-}
-
-a{
-    color: #FFFFFF;
+#map{
+    bottom:0px;
+    width: 100%;
+    height: 40%;
+    position: absolute;
 }
 
 .middle{
@@ -74,6 +75,3 @@ a{
     width: 100%;
 }
 
-.controls > *{
-    display: inline;
-}

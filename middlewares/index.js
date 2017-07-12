@@ -8,16 +8,26 @@ module.exports = (app, config) => {
         filename: './challenge.db',
         autoload: true 
     });
-    db.ensureIndex({
-        fieldName: 'address',
-        unique: true,
-        sparse: true
-    }, (err) => {
+
+    const DBIndexError = (err) => {
         if (config.debug && err) {
             console.log('Failed to set up unique index in database:');
             console.dir(err);
         }
-    });
+    };
+
+    db.ensureIndex({
+        fieldName: 'address',
+        unique: true,
+        sparse: true
+    }, DBIndexError);
+
+    db.ensureIndex({
+        fieldName: 'id',
+        unique: true,
+        sparse: true
+    }, DBIndexError);
+
     app.context.db = db;
 
     // Set up the config and statistics

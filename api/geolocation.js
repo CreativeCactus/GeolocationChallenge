@@ -8,13 +8,15 @@ let locked = false;
 function selectAndLocateOne() {
     if (locked) return;
     locked = true;
-
     db.findOne({ type: 'location', location: '', status: util.statusToInt('pending') }, (err, doc) => {
         if (err && config.debug) {
             console.log('Geolocation error:');
-            console.dir(error);
+            console.trace(error);
         }
-        if (!doc) return;
+        if (!doc) {
+            locked = false;            
+            return;
+        }
         locate(doc.address, (status, results) => {
             // Determine location based on status
             const location = {
@@ -25,7 +27,7 @@ function selectAndLocateOne() {
                 ZERO_RESULTS: () => '0,0',
                 OVER_QUERY_LIMIT: () => {
                     console.error('FATAL: Over API query limit');
-                    throw status;
+                    throw status;  // Locked
                 },
                 REQUEST_DENIED: () => 'Error',
                 INVALID_REQUEST: () => 'Error',
@@ -38,18 +40,19 @@ function selectAndLocateOne() {
                 status: util.statusToInt('ready'),
                 location
             } }, {}, (err, num) => {
-                if (err && config.debug) console.dir(err);
-                if (err) return;
+                if (err && config.debug) console.trace(err);
+                if (err) return; // Locked
 
+                updateParents(doc._id);
                 locked = false;
             });
         });
     });
 }
 
-
 function locate(address, cb) {
-    const path = `/maps/api/geocode/json?address=${encodeURIComponent(address.replace(/\W/g, '+'))}&key=${config.google.apikey}`;
+    const addr = encodeURIComponent(address.replace(/\W/g, '+'));
+    const path = `/maps/api/geocode/json?address=${addr}&key=${config.google.apikey}`;
     
     https.get({
         host: 'maps.googleapis.com',
@@ -71,12 +74,18 @@ function locate(address, cb) {
         });
     });
 }
-    // "OK" indicates that no errors occurred; the address was successfully parsed and at least one geocode was returned.
-    // "ZERO_RESULTS" indicates that the geocode was successful but returned no results. This may occur if the geocoder was passed a non-existent address.
-    // "OVER_QUERY_LIMIT" indicates that you are over your quota.
-    // "REQUEST_DENIED" indicates that your request was denied.
-    // "INVALID_REQUEST" generally indicates that the query (address, components or latlng) is missing.
-    // "UNKNOWN_ERROR" indicates that the request could not be processed due to a server error. The request may succeed if you try again.
+
+// Update requests which refer to this loc._id
+function updateParents(id) {
+    db.update({ type: 'request', status: util.statusToInt('pending'), children: { $elemMatch: id } }, {
+        $inc: { numComplete: 1 }
+    }, {}, (err, num) => {
+        if (err && config.debug) console.trace(err);
+        if (err) return;
+
+        console.trace(num);
+    });
+}
 
 module.exports = (_db, _config, _utils) => {
     // Set up the local database, configuration, and utils
@@ -84,5 +93,5 @@ module.exports = (_db, _config, _utils) => {
     config = _config;
     util = _utils({}).util;
     
-    setInterval(selectAndLocateOne, 1000);
+    setInterval(selectAndLocateOne, config.google.sleep);
 };
