@@ -1,0 +1,79 @@
+@import url(https://fonts.googleapis.com/css?family=Cookie);
+
+*{
+    padding:0;
+    margin: 0 auto;
+    text-align:center;
+}
+
+body{
+    color: #111111;
+    background-size: 128px 128px;
+    font:14px/1.3 'Open Sans', sans-serif;
+    background-image: url('/assets/tile3.jpg');
+}
+
+.header{
+    text-shadow: white 0.1em 0.1em 0.2em;
+}
+
+h1{
+    font:28px/1.3 'Open Sans', sans-serif;
+}
+
+h2{
+    font:20px/1.3 'Open Sans', sans-serif;
+}
+
+a{
+    color: #FFFFFF;
+}
+
+.middle{
+    width: 400px;
+    display: block;
+    position: relative;
+}
+
+.box{
+    height: 200px;
+
+    border-radius: 8px;
+    border-width: thick;
+    border-style: outset;
+    border-color: #AAAAAA;
+
+    color: #AAAAAA;
+    margin-top: 50px;
+
+    background-size: 32px 32px;
+    background-image: url('/assets/tile1.jpg');
+}
+
+.container{
+    top:5vh;
+    padding-top: 5vh;
+}
+
+.left{
+    left: 5px;
+    float: left;
+    position: relative;
+}
+
+.right{
+    right: 5px;
+    float: right;
+    position: relative;
+}
+
+.down{
+    top:35px;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.controls > *{
+    display: inline;
+}

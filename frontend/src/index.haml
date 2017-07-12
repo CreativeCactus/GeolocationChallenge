@@ -1,0 +1,27 @@
+!!! 5
+%html{xmlns: "http://www.w3.org/1999/xhtml", lang:"en"}
+  %head
+    %title Address2LatLon
+    %link{rel: "icon", href: "favicon.ico?reload", type:"image/x-icon"}
+    %link{rel: "stylesheet", href: "/style.css", type:"text/css"}
+    %script{src:"https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js", integrity:"sha256-zBy1l2WBAh2vPF8rnjFMUXujsfkKjya0Jy5j6yKj0+Q=", crossorigin:"anonymous", type:"text/javascript"}
+    %script{src:"/assets/main.js", type:"text/javascript"}
+  %body{ng-app:"latlonApp"}
+    %section.container{ng-controller:"ngCtrl"}
+      %div.header
+        %h1= "Address2LatLon"
+        %h2= stats
+      %div.middle
+        %div.box
+          %div#entries{ng-bind-html:"EntriesList() | secureHtml"}
+        %div.controls
+          %input.left#UploadSelect{type: "file"}
+          %input.right#UploadSubmit{type: "button", value:"Upload"}
+        %b
+          %div.down#UploadStatus
+            = "{{UploadStatus}}"
+    %br
+    %br
+    %br
+    %hr
+    %div="Map goes here... (incomplete)"
