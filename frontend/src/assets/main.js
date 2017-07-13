@@ -170,7 +170,7 @@ latlonApp.controller('ngCtrl', ($scope) => {
 
             entryUpdate(e.id)
                 .then((entry) => { EntriesList[i] = Object.assign(EntriesList[i], entry); })
-                .catch((err) => { EntriesList[i].error = err; })
+                .catch((err) => { EntriesList[i].error = err; EntriesList[i].status = 'failed'; })
                 .then(evalInScope);
         });
     };

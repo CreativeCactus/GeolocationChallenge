@@ -89,7 +89,6 @@ router.post('/', async (ctx) => {
         } else {
             ctx.util.end(400, `Error: ${err.message}`);
         }
-        console.trace(err);
     });
     console.trace({ result });
 
@@ -108,8 +107,8 @@ router.post('/', async (ctx) => {
 
     // Formulate a response
     const response = Object.assign({}, request);
-    response.children = [];
     response.percent = percent;
+    response.children = exist;
 
     ctx.body = {
         status: ctx.util.statusToInt('pending'),
@@ -144,14 +143,16 @@ router.get('/:id', async (ctx) => {
     }
 
     // Get array of locations matching array of ids
-    const childIds = parent.req.children;
-    const locations = (!childIds || !childIds.length) ?
-    await db.location.find({ 
-        id: { $in: childIds },
-        status: ctx.util.statusToInt('ready')
-    }).then(locs => ({ locs }))
-        .catch(err => ({ err })) :
-        { locs: [] };
+    const childIds = request.doc.children;
+    let locations = { locs: [] };
+    if (childIds && childIds.length) {
+        locations = await db.location.find({ 
+            _id: { $in: childIds },
+            status: ctx.util.statusToInt('ready')
+        })
+            .then(locs => ({ locs }))
+            .catch(err => ({ err }));
+    }
 
     if (ctx.config.debug && locations.err) {
         console.trace(err);
@@ -162,30 +163,32 @@ router.get('/:id', async (ctx) => {
     }
 
     // Re-evaluate status, then update async
-    const percent = locs.length ? ~~((100 * parent.req.children.length) / locs.length) : 0;
-    const done = (percent === 100);
-    parent.req.status = ctx.util.statusToInt(done ? 'ready' : 'pending');
-    db.request.update({ id }, parent.req);
+    const done = (request.doc.numComplete === request.doc.numChildren);
+    const status = ctx.util.statusToInt(done ? 'ready' : 'pending');
+    if (status !== request.doc.status) {
+        request.doc.status = status;
+        db.request.update({ id }, request.doc);
+    }
 
     // Formulate response
-    const response = Object.assign({}, parent.req);
-    response.status = ctx.util.intToStatus(response.status);
-    response.percent = percent;
-    response.children = locs;
-    ctx.body = presentable(parent.req, ctx.util);
+    const response = Object.assign({}, request.doc, { children: locations.locs });
+    ctx.body = presentable(response, ctx.util);
 });
 
 function presentable(req, util) {
-    return {
+    const percent = req.numComplete ? ~~((100 * req.numComplete) / req.numChildren) : 0;
+    const result = {
         id: req.id,
         type: req.type,
         start: req.start,
-        status: util.intToStatus(req.status),
-        percent: req.percent,
         children: req.children || [],
         numComplete: req.numComplete,
-        numChildren: req.numChildren
+        numChildren: req.numChildren,
+        percent: req.percent || percent,
+        status: (typeof req.status === 'string') ? req.status : util.intToStatus(req.status)
     };
+    console.trace(result);
+    return result;
 }
 
 module.exports = (app) => {

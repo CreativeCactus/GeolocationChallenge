@@ -93,14 +93,10 @@ Returns JSON containing the matching request or `{err:"Record not found"}`
 
 ## Known Bugs
 
-*** API states are malfunctional as of last commit! ***
-
 Tests are not set up
 
 Dockerfile not included
 
 CSS on front page could use polish
 
-Might throw error rather than prune if input contains duplicates
-
-Possible to determine names used for addresses if any by querying after they are populated
+Possible to determine names used for addresses if any by querying after they are populated, due to indexing

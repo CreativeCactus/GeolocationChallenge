@@ -9,9 +9,9 @@ module.exports = (ctx) => {
         }
         async insert(doc) {
             doc.type = this.type;
-            await new Promise((a, r) => {
-                console.trace(doc);
+            return new Promise((a, r) => {
                 ctx.db.insert(doc, (err, done) => {
+                    console.trace({ doc, err, done });
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
                     return a(done);
@@ -20,8 +20,9 @@ module.exports = (ctx) => {
         }
         async find(query) {
             query.type = this.type;
-            await new Promise((a, r) => {
+            return new Promise((a, r) => {
                 ctx.db.find(query, (err, docs) => {
+                    console.trace({ query, err, docs });
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
                     return a(docs);
@@ -30,7 +31,7 @@ module.exports = (ctx) => {
         }
         async findOne(query) {
             query.type = this.type;
-            await new Promise((a, r) => {
+            return new Promise((a, r) => {
                 db.findOne(query, (err, doc) => {
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
@@ -40,7 +41,7 @@ module.exports = (ctx) => {
         }
         async update(query, update, options = {}) {
             query.type = this.type;
-            await new Promise((a, r) => {
+            return new Promise((a, r) => {
                 db.update(query, update, options, (err, num) => {
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
@@ -50,7 +51,7 @@ module.exports = (ctx) => {
         }
         async count(query) {
             query.type = this.type;
-            await new Promise((a, r) => {
+            return new Promise((a, r) => {
                 db.count(query, (err, num) => {
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
