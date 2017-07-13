@@ -70,8 +70,6 @@ router.post('/', async (ctx) => {
     // Exclude extant records from insertion
     exist.forEach((loc) => { delete indexed[loc.address]; });
     const validatedTrimmed = Object.values(indexed) || [];
-
-    console.trace({ all, exist, addresses });
     
     // Store the root of the request synchronously
     const request = {
@@ -90,8 +88,6 @@ router.post('/', async (ctx) => {
             ctx.util.end(400, `Error: ${err.message}`);
         }
     });
-    console.trace({ result });
-
 
     // Format and store the locations asynchronously, one by one (some may be dupe)
     for (let i = 0; i < validatedTrimmed.length; i++) {
@@ -187,7 +183,6 @@ function presentable(req, util) {
         percent: req.percent || percent,
         status: (typeof req.status === 'string') ? req.status : util.intToStatus(req.status)
     };
-    console.trace(result);
     return result;
 }
 

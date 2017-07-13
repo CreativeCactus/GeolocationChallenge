@@ -11,7 +11,6 @@ module.exports = (ctx) => {
             doc.type = this.type;
             return new Promise((a, r) => {
                 ctx.db.insert(doc, (err, done) => {
-                    console.trace({ doc, err, done });
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
                     return a(done);
@@ -22,7 +21,6 @@ module.exports = (ctx) => {
             query.type = this.type;
             return new Promise((a, r) => {
                 ctx.db.find(query, (err, docs) => {
-                    console.trace({ query, err, docs });
                     if (err && ctx.config.debug) console.trace(err);
                     if (err) return r(err);
                     return a(docs);
